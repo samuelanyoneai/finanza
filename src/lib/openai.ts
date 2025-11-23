@@ -1,5 +1,7 @@
 const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-const API_URL = 'https://api.openai.com/v1/chat/completions';
+const API_URL = import.meta.env.DEV
+  ? 'https://api.openai.com/v1/chat/completions'
+  : '/api/chat';
 
 const SYSTEM_PROMPT = `Eres un asesor financiero experto especializado en inversión, análisis de mercados de valores y recomendaciones financieras.
 
@@ -29,12 +31,17 @@ export async function sendMessage(
       ? `${SYSTEM_PROMPT}\n\nDatos de mercado actual:\n${contextData}`
       : SYSTEM_PROMPT;
 
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    if (import.meta.env.DEV) {
+      headers['Authorization'] = `Bearer ${API_KEY}`;
+    }
+
     const response = await fetch(API_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`,
-      },
+      headers,
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
